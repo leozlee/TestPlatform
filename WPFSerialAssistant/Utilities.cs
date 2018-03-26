@@ -10,7 +10,8 @@ namespace WPFSerialAssistant
     {
         public static string BytesToText(List<byte> bytesBuffer, ReceiveMode mode, Encoding encoding)
         {
-            string result = "";
+            StringBuilder sb = new StringBuilder();
+            //string result = "";
 
             if (mode == ReceiveMode.Character)
             {
@@ -22,23 +23,37 @@ namespace WPFSerialAssistant
                 switch (mode)
                 {
                     case ReceiveMode.Hex:
-                        result += Convert.ToString(item, 16).ToUpper() + " ";
+                        {
+                            string tmp = Convert.ToString(item, 16).ToUpper();
+                            if ( tmp.Length < 2)
+                            {
+                                sb.Append("0");
+                            }
+                            sb.Append(tmp).Append(" ");
+                        }
                         break;
                     case ReceiveMode.Decimal:
-                        result += Convert.ToString(item, 10) + " ";
+                        sb.Append(Convert.ToString(item, 10)).Append(" ");
                         break;
                     case ReceiveMode.Octal:
-                        result += Convert.ToString(item, 8) + " ";
+                        sb.Append(Convert.ToString(item, 8)).Append(" ");
                         break;
                     case ReceiveMode.Binary:
-                        result += Convert.ToString(item, 2) + " ";
+                        {
+                            string tmp = Convert.ToString(item, 2);
+                            if ( tmp.Length < 8 )
+                            {
+                                sb.Append('0', 8 - tmp.Length);
+                            }
+                            sb.Append(tmp).Append(" ");
+                        }
                         break;
                     default:
                         break;
                 }
             }
 
-            return result;
+            return sb.ToString();
         }
 
         public static string ToSpecifiedText(string text, SendMode mode, Encoding encoding)
