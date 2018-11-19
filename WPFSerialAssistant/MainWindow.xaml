@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPFSerialAssistant"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen"
-        Title="串口助手(Version 1.3)" Height="600" Width="1024"
+        Title="生产出货测试软件" Height="600" Width="1024"
         MinHeight="550" MinWidth="1024"
         Icon="1.ico" Closing="Window_Closing" PreviewKeyDown="Window_KeyDown">
     <DockPanel Name="rootPanel">
@@ -26,17 +26,35 @@
                     <RadioButton Name="appendReturnNewLineRadioButton" Tag="retnewline" Content="回车新行(\r\n)" Click="appendRadioButton_Click"></RadioButton>
                 </MenuItem>
             </MenuItem>
-            
+
             <MenuItem Header="视图(_V)">
                 <MenuItem Name="serialSettingViewMenuItem" Header="串口配置面板" IsChecked="True" Click="serialSettingViewMenuItem_Click"></MenuItem>
                 <MenuItem Name="autoSendDataSettingViewMenuItem" Header="自动发送设置面板" IsChecked="True" Click="autoSendDataSettingViewMenuItem_Click"></MenuItem>
                 <MenuItem Name="serialCommunicationSettingViewMenuItem" Header="通信设置面板" IsChecked="True" Click="serialCommunicationSettingViewMenuItem_Click"></MenuItem>
                 <MenuItem Name="compactViewMenuItem" Header="简洁视图" IsChecked="False" Click="compactViewMenuItem_Click" Visibility="Visible"></MenuItem>
             </MenuItem>
+            <MenuItem Header="升级(_U)">
+                <MenuItem Name="upgradedspMenuItem" Header="升级设备" Click="upgradedspMenuItem_Click"></MenuItem>
+                <MenuItem Name="upgradevoiceMenuItem" Header="烧录语音" Click="upgradevoiceMenuItem_Click"></MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="参数配置">
+                <MenuItem Name="calcconfigMenuItem" Header="校验参数" Click="calcconfigMenuItem_Click"></MenuItem>
+                <MenuItem Name="modifyconfigMenuItem" Header="修改参数" Click="modifyconfigMenuItem_Click"></MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="订单信息">
+                <MenuItem Name="orderinfoMenuItem" Header="订单信息" Click="orderinfoMenuItem_Click"></MenuItem>
+            </MenuItem>
+
             <MenuItem Header="帮助(_H)">
                 <MenuItem Name="aboutMenuItem" Header="关于(_A)" Click="aboutMenuItem_Click"></MenuItem>
                 <MenuItem Name="helpMenuItem" Header="软件文档(_D)" Click="helpMenuItem_Click"></MenuItem>
             </MenuItem>
+
+
+
+
         </Menu>
         <!--状态栏-->
         <StatusBar DockPanel.Dock="Bottom" Name="statusBar" Background="#FF007ACC" Padding="2">
@@ -86,11 +104,12 @@
                                     <ComboBoxItem>1200</ComboBoxItem>
                                     <ComboBoxItem>2400</ComboBoxItem>
                                     <ComboBoxItem>4800</ComboBoxItem>
-                                    <ComboBoxItem IsSelected="True">9600</ComboBoxItem>
+                                    <ComboBoxItem >9600</ComboBoxItem>
                                     <ComboBoxItem>19200</ComboBoxItem>
                                     <ComboBoxItem>38400</ComboBoxItem>
-                                    <ComboBoxItem>115200</ComboBoxItem>
-                                </ComboBox>
+                                        <ComboBoxItem IsSelected="True">115200</ComboBoxItem>
+                                    <ComboBoxItem>230400</ComboBoxItem>
+                                    </ComboBox>
                             </Grid>
                             <!--奇偶校验位-->
                             <Grid Margin="0,0,0,10" DockPanel.Dock="Top">
@@ -205,8 +224,8 @@
                                 <StackPanel>
                                     <GroupBox Header="发送方式" Margin="5,5,5,0"  BorderBrush="{Binding ElementName=serialPortConfigPanel, Path=BorderBrush}" BorderThickness="{Binding ElementName=serialPortConfigPanel, Path=BorderThickness}">
                                         <StackPanel>
-                                            <RadioButton Name="sendCharacterRadioButton" Tag="char" Click="sendDataModeRadioButton_Click" Content="字符串" IsChecked="True" Margin="0,5"></RadioButton>
-                                            <RadioButton Name="sendHexRadioButton" Tag="hex" Click="sendDataModeRadioButton_Click" Content="十六进制" Margin="0,0,0,5"></RadioButton>
+                                                <RadioButton Name="sendCharacterRadioButton" Tag="char" Click="sendDataModeRadioButton_Click" Content="字符串"  Margin="0,5"></RadioButton>
+                                                <RadioButton Name="sendHexRadioButton" Tag="hex" Click="sendDataModeRadioButton_Click" Content="十六进制"  IsChecked="True" Margin="0,0,0,5"></RadioButton>
                                         </StackPanel>
                                     </GroupBox>
                                  

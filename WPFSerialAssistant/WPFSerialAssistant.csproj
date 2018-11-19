@@ -83,12 +83,30 @@
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core.cs" />
+    <Compile Include="deviceconfig.xaml.cs">
+      <DependentUpon>deviceconfig.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="downloadvoice.xaml.cs">
+      <DependentUpon>downloadvoice.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SAFile.cs" />
     <Compile Include="SASerialPort.cs" />
     <Compile Include="SATimer.cs" />
     <Compile Include="SAViewMode.cs" />
+    <Compile Include="Upgradedsp.xaml.cs">
+      <DependentUpon>Upgradedsp.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utilities.cs" />
+    <Compile Include="Ymodem.cs" />
     <Page Include="About.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="deviceconfig.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="downloadvoice.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -106,6 +124,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Upgradedsp.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

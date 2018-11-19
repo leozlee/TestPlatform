@@ -17,6 +17,15 @@ namespace WPFSerialAssistant
         Binary      //二进制
     }
 
+    public enum VersionTpye
+    {
+        None = 0x00,
+        DSP = 0X01,
+        MCU = 0x02
+
+    }
+
+
     public enum SendMode
     {
         Character,  //字符
@@ -29,9 +38,23 @@ namespace WPFSerialAssistant
         private ReceiveMode receiveMode = ReceiveMode.Character;
 
         // 发送的方式
-        private SendMode sendMode = SendMode.Character;
+        private SendMode sendMode = SendMode.Hex;
 
         #endregion
+
+        public int m_showvalue = 0;         //进度条变量
+        private int m_upgradeflag = 0;      //升级程序的flag
+        private int m_downloadvoiceflag = 0;      //升级程序的flag
+
+
+        //查询对象
+        //private VersionTpye Vtype = VersionTpye.None;
+
+        public Ymodem MyYmodem = new Ymodem();
+        WPFSerialAssistant.upgradedsp m_upgradedsp = null;
+        WPFSerialAssistant.downloadvoice m_downloadvoice = null;
+
+
 
         #region Event handler for menu items
         private void saveSerialDataMenuItem_Click(object sender, RoutedEventArgs e)
@@ -140,6 +163,56 @@ namespace WPFSerialAssistant
             about.ShowDialog();            
         }
 
+
+        private void upgradedspMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            m_upgradeflag = 1;
+            m_upgradedsp = new upgradedsp(this);
+            m_upgradedsp.ShowDialog();
+            m_upgradeflag = 0;
+        }
+
+
+
+        public void ShowBar(double value, WPFSerialAssistant.upgradedsp m_upgradedsp)
+        {
+            this.Dispatcher.Invoke(new Action(delegate {
+                m_upgradedsp.UpgradeProgressBar.Value = value;
+            }));
+        }
+
+
+        private void upgrademcuMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void upgradevoiceMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            m_downloadvoiceflag = 1;
+            m_downloadvoice = new downloadvoice(this);
+            m_downloadvoice.ShowDialog();
+            m_downloadvoiceflag = 0;
+        }
+
+
+        private void calcconfigMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            WPFSerialAssistant.deviceconfig m_deviceconfig = new deviceconfig();
+            m_deviceconfig.ShowDialog();
+            
+        }
+
+        private void modifyconfigMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void orderinfoMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+ 
+        }
+
         private void helpMenuItem_Click(object sender, RoutedEventArgs e)
         {
 
@@ -195,6 +268,38 @@ namespace WPFSerialAssistant
                 SendData();
             }
         }
+
+
+        private bool SendData(string data)
+        {
+            return SerialPortWrite(data);
+        }
+
+
+        //发送数据锁存
+        public void SendDataLock()
+        {
+            string DataLock = "01 10 00 03 00 01 02 00 01 67 A3";
+            SendData(DataLock);
+
+        }
+
+
+        private void ChangBaudRate(int Baud)
+        {
+            serialPort.BaudRate = Baud;
+        }
+
+
+        public void InteractionInfoShow(string info)
+        {
+            this.Dispatcher.Invoke(new Action(delegate {
+                statusInfoTextBlock.Text = info;
+            }));
+        }
+
+
+
 
         private void saveRecvDataButton_Click(object sender, RoutedEventArgs e)
         {
@@ -489,6 +594,10 @@ namespace WPFSerialAssistant
         }
 
 
+
+
+
+
         private void ReceivedDataHandler(object obj)
         {
             List<byte> recvBuffer = new List<byte>();
@@ -516,6 +625,185 @@ namespace WPFSerialAssistant
 
             // TO-DO：
             // 处理数据，比如解析指令等等
+
+
+            if (m_upgradeflag == 1)
+            {
+
+                m_showvalue++;
+
+                switch (recvBuffer.Count)
+                {
+                    case 8://数据锁存返回
+                        if (recvBuffer[0] == 0x01 && recvBuffer[1] == 0x10 && recvBuffer[3] == 0x03)
+                        {
+                            //根据选择框来判断升级对象
+                            this.Dispatcher.Invoke(new Action(delegate
+                            {
+
+                                if (m_upgradedsp.DspButton.IsChecked == true)
+                                {
+
+                                    SendData("01 10 00 1B 00 01 02 00 01 64 7B");
+                                    Thread.Sleep(2000);
+                                    ChangBaudRate(230400);
+                                    InteractionInfoShow("准备升级主机，修改波特率为230400");
+                                }
+                                else if (m_upgradedsp.McuButton.IsChecked == true)
+                                {
+                                    SendData("01 10 00 1A 00 01 02 00 01 65 AA");
+                                    Thread.Sleep(2000);
+                                    ChangBaudRate(230400);
+                                    InteractionInfoShow("准备升级灯板，修改波特率为230400");
+                                }
+
+                            }));
+                        }
+                        break;
+                    case 1:
+                        switch (recvBuffer[0])
+                        {
+                            case Ymodem.MODEM_C:
+                                this.Dispatcher.Invoke(new Action(delegate {
+
+                                    if (m_upgradedsp.McuButton.IsChecked == true || m_upgradedsp.DspButton.IsChecked == true)
+                                    {
+                                        if (!MyYmodem.CheckFirstPackSend())
+                                        {
+                                            InteractionInfoShow("目标已就绪，发送初始包数据");
+                                            //发送第一包数据
+                                            SendData(MyYmodem.YmodemSendFirstPacket());
+                                            //将相关标志位置位
+                                            MyYmodem.SetFirstPackSend();
+                                        }
+                                        else if (MyYmodem.CheckFirstPackSendAck() && !MyYmodem.CheckEotAck())
+                                        {
+                                            SendData(MyYmodem.SendYmodemPacket());//正文传输
+                                            InteractionInfoShow("收到设备的起始包的C");
+                                            //ShowBar(2);
+                                        }
+                                        else if (MyYmodem.CheckEotAck())//发送结束包
+                                        {
+                                            InteractionInfoShow("结束包");
+                                            SendData(MyYmodem.YmodemSendEndPacket());
+                                            Thread.Sleep(1000);
+                                            ChangBaudRate(115200);//将波特率修改回来
+                                                                  //ShowBar(Max);
+                                            InteractionInfoShow("设备升级成功");
+
+                                            this.Dispatcher.Invoke(new Action(delegate
+                                            {
+                                                if (m_upgradedsp.McuButton.IsChecked == true)
+                                                {
+                                                    MyYmodem.ClearAll();
+                                                    MessageBox.Show("恭喜，升级成功");
+                                                }
+                                            }));
+                                            m_showvalue = 0;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        InteractionInfoShow("请选择升级文件");
+
+                                    }
+                                }));
+                                break;
+                            case Ymodem.MODEM_ACK:
+                                if (!MyYmodem.CheckFirstPackSendAck())
+                                {
+                                    MyYmodem.SetFirstPackSendAck();
+                                    InteractionInfoShow("收到设备的起始包的ACK");
+                                    ShowBar(1, m_upgradedsp);
+                                }
+                                //发送了初始包但没有发送最后一包数据包
+                                else if (MyYmodem.CheckFirstPackSendAck() && !MyYmodem.CheckLastPackSend())//
+                                {
+                                    SendData(MyYmodem.SendYmodemPacket());//正文传输
+                                    InteractionInfoShow("发送数据包......");
+                                    ShowBar(m_showvalue, m_upgradedsp);
+                                }
+                                //发送了最后一包数据包但没有发EOT
+                                else if (MyYmodem.CheckLastPackSend() && !MyYmodem.CheckEotSend())
+                                {
+                                    MyYmodem.SetLastPackSendAck();          //收到最后一个数据包的回应
+                                    SendData(MyYmodem.YmodemSendEOT());     //发送EOT信号
+                                    InteractionInfoShow("EOT信号");
+
+                                    this.Dispatcher.Invoke(new Action(delegate {
+
+                                        if (m_upgradedsp.DspButton.IsChecked == true)
+                                        {
+                                            MyYmodem.ClearAll();
+                                            MessageBox.Show("恭喜，升级成功");
+                                            Thread.Sleep(1000);
+                                            ChangBaudRate(115200);//将波特率修改回来
+                                                                  //ShowBar(Max);
+                                        }
+                                    }));
+                                }
+                                else if (MyYmodem.CheckEotSend() && !MyYmodem.CheckEotAck())
+                                {
+                                    MyYmodem.SetEotAck();
+                                }
+                                break;
+                            case Ymodem.MODEM_NAK:
+                                //续传，暂不实现
+                                break;
+                            default:
+                                InteractionInfoShow("开机信号");
+                                break;
+                        }
+                        break;
+                    case 2:
+                        {
+                            if (recvBuffer[0] == Ymodem.MODEM_ACK && recvBuffer[1] == Ymodem.MODEM_C)
+                            {
+
+                                if (!MyYmodem.CheckFirstPackSendAck())
+                                {
+                                    MyYmodem.SetFirstPackSendAck();
+                                    SendData(MyYmodem.SendYmodemPacket());//正文传输
+                                    InteractionInfoShow("收到设备的起始包的C,开始传输");
+                                }
+                            }
+
+
+                        }
+                        break;
+                    default:
+                        //MessageBox.Show("升级成功:)");
+                        break;
+                }
+
+
+
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
         #endregion
     }

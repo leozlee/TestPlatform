@@ -123,6 +123,32 @@ namespace WPFSerialAssistant
             Information("串口自动发送数据中...");
         }
 
+
+
+        private bool SendData(List<byte> Tab)
+        {
+            if (Tab != null)
+            {
+                string hex = "";
+                foreach (byte m in Tab)
+                {
+                    hex += m.ToString("X2");
+                    hex += " ";
+                }
+                return SerialPortWrite(hex);
+            }
+            else
+            {
+                MessageBox.Show("发送数据不能为空");
+                return false;
+            }
+
+        }
+
+
+
+
+
         private int GetAutoSendDataInterval()
         {
             int interval = 1000;
