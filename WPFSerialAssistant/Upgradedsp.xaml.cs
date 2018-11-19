@@ -130,6 +130,28 @@ namespace WPFSerialAssistant
                 this.parent.ShowBar(0, this);
                 //value = 0;//清空进度条数值
                 System.Threading.Thread.Sleep(3000);
+
+                //根据选择框来判断升级对象
+                this.Dispatcher.Invoke(new Action(delegate
+                {
+
+                    if (DspButton.IsChecked == true)
+                    {
+                        this.parent.SendData("01 10 00 1B 00 01 02 00 01 64 7B");
+                        System.Threading.Thread.Sleep(3000);
+                        this.parent.ChangBaudRate(230400);
+                        this.parent.InteractionInfoShow("准备升级主机，修改波特率为230400");
+                    }
+                    else if (McuButton.IsChecked == true)
+                    {
+                        this.parent.SendData("01 10 00 1A 00 01 02 00 01 65 AA");
+                        System.Threading.Thread.Sleep(2000);
+                        this.parent.ChangBaudRate(230400);
+                        this.parent.InteractionInfoShow("准备升级灯板，修改波特率为230400");
+                    }
+
+                }));
+
                 this.parent.MyYmodem.ClearAll();
             }
             else

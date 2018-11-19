@@ -43,8 +43,8 @@ namespace WPFSerialAssistant
         #endregion
 
         public int m_showvalue = 0;         //进度条变量
-        private int m_upgradeflag = 0;      //升级程序的flag
-        private int m_downloadvoiceflag = 0;      //升级程序的flag
+        public int m_upgradeflag = 0;      //升级程序的flag
+        public int m_downloadvoiceflag = 0;      //升级程序的flag
 
 
         //查询对象
@@ -270,7 +270,7 @@ namespace WPFSerialAssistant
         }
 
 
-        private bool SendData(string data)
+        public bool SendData(string data)
         {
             return SerialPortWrite(data);
         }
@@ -285,7 +285,7 @@ namespace WPFSerialAssistant
         }
 
 
-        private void ChangBaudRate(int Baud)
+        public void ChangBaudRate(int Baud)
         {
             serialPort.BaudRate = Baud;
         }
@@ -626,7 +626,7 @@ namespace WPFSerialAssistant
             // TO-DO：
             // 处理数据，比如解析指令等等
 
-
+            #region ymodem升级
             if (m_upgradeflag == 1)
             {
 
@@ -634,32 +634,31 @@ namespace WPFSerialAssistant
 
                 switch (recvBuffer.Count)
                 {
-                    case 8://数据锁存返回
-                        if (recvBuffer[0] == 0x01 && recvBuffer[1] == 0x10 && recvBuffer[3] == 0x03)
-                        {
-                            //根据选择框来判断升级对象
-                            this.Dispatcher.Invoke(new Action(delegate
-                            {
+                    //case 8:         //数据锁存返回
+                    //    if (recvBuffer[0] == 0x01 && recvBuffer[1] == 0x10 && recvBuffer[3] == 0x03)
+                    //    {
+                    //        根据选择框来判断升级对象
+                    //        this.Dispatcher.Invoke(new Action(delegate
+                    //        {
 
-                                if (m_upgradedsp.DspButton.IsChecked == true)
-                                {
+                    //            if (m_upgradedsp.DspButton.IsChecked == true)
+                    //            {
+                    //                SendData("01 10 00 1B 00 01 02 00 01 64 7B");
+                    //                Thread.Sleep(2000);
+                    //                ChangBaudRate(230400);
+                    //                InteractionInfoShow("准备升级主机，修改波特率为230400");
+                    //            }
+                    //            else if (m_upgradedsp.McuButton.IsChecked == true)
+                    //            {
+                    //                SendData("01 10 00 1A 00 01 02 00 01 65 AA");
+                    //                Thread.Sleep(2000);
+                    //                ChangBaudRate(230400);
+                    //                InteractionInfoShow("准备升级灯板，修改波特率为230400");
+                    //            }
 
-                                    SendData("01 10 00 1B 00 01 02 00 01 64 7B");
-                                    Thread.Sleep(2000);
-                                    ChangBaudRate(230400);
-                                    InteractionInfoShow("准备升级主机，修改波特率为230400");
-                                }
-                                else if (m_upgradedsp.McuButton.IsChecked == true)
-                                {
-                                    SendData("01 10 00 1A 00 01 02 00 01 65 AA");
-                                    Thread.Sleep(2000);
-                                    ChangBaudRate(230400);
-                                    InteractionInfoShow("准备升级灯板，修改波特率为230400");
-                                }
-
-                            }));
-                        }
-                        break;
+                    //        }));
+                    //    }
+                    //    break;
                     case 1:
                         switch (recvBuffer[0])
                         {
@@ -689,14 +688,14 @@ namespace WPFSerialAssistant
                                             Thread.Sleep(1000);
                                             ChangBaudRate(115200);//将波特率修改回来
                                                                   //ShowBar(Max);
-                                            InteractionInfoShow("设备升级成功");
-
+                      
                                             this.Dispatcher.Invoke(new Action(delegate
                                             {
                                                 if (m_upgradedsp.McuButton.IsChecked == true)
                                                 {
                                                     MyYmodem.ClearAll();
-                                                    MessageBox.Show("恭喜，升级成功");
+                                                    //MessageBox.Show("恭喜，升级成功");
+                                                    InteractionInfoShow("设备升级成功");
                                                 }
                                             }));
                                             m_showvalue = 0;
@@ -775,6 +774,17 @@ namespace WPFSerialAssistant
                         //MessageBox.Show("升级成功:)");
                         break;
                 }
+            }
+            #endregion
+
+
+
+
+            #region 烧录语音
+            if(m_downloadvoiceflag == 1)
+            {
+
+
 
 
 
@@ -783,26 +793,7 @@ namespace WPFSerialAssistant
 
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            #endregion
 
         }
         #endregion
