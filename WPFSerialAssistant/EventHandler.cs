@@ -45,6 +45,7 @@ namespace WPFSerialAssistant
         public int m_showvalue = 0;         //进度条变量
         public int m_upgradeflag = 0;      //升级程序的flag
         public int m_downloadvoiceflag = 0;      //升级程序的flag
+        public int m_voicievalue = 0;
 
 
         //查询对象
@@ -182,6 +183,19 @@ namespace WPFSerialAssistant
         }
 
 
+        public void ShowBar(double value, WPFSerialAssistant.downloadvoice m_downloadvoice)
+        {
+            this.Dispatcher.Invoke(new Action(delegate {
+                m_downloadvoice.voicebar.Value = value;
+            }));
+        }
+
+
+
+
+
+
+
         private void upgrademcuMenuItem_Click(object sender, RoutedEventArgs e)
         {
 
@@ -283,6 +297,20 @@ namespace WPFSerialAssistant
             SendData(DataLock);
 
         }
+
+
+        public void ResetMcu()
+        {
+            string DataLock = "01 10 00 03 00 01 02 00 01 67 A3";
+            SendData(DataLock);
+            Thread.Sleep(2000);
+            string resetmct = "01 10 00 1F 00 01 02 00 01 65 FF";
+            SendData(resetmct);
+        }
+
+
+
+
 
 
         public void ChangBaudRate(int Baud)
@@ -593,11 +621,6 @@ namespace WPFSerialAssistant
             }          
         }
 
-
-
-
-
-
         private void ReceivedDataHandler(object obj)
         {
             List<byte> recvBuffer = new List<byte>();
@@ -627,11 +650,9 @@ namespace WPFSerialAssistant
             // 处理数据，比如解析指令等等
 
             #region ymodem升级
-            if (m_upgradeflag == 1)
+            if (m_upgradedsp != null && m_upgradedsp.m_upgradeflag && m_upgradeflag == 1)
             {
-
                 m_showvalue++;
-
                 switch (recvBuffer.Count)
                 {
                     //case 8:         //数据锁存返回
@@ -688,16 +709,6 @@ namespace WPFSerialAssistant
                                             Thread.Sleep(1000);
                                             ChangBaudRate(115200);//将波特率修改回来
                                                                   //ShowBar(Max);
-                      
-                                            this.Dispatcher.Invoke(new Action(delegate
-                                            {
-                                                if (m_upgradedsp.McuButton.IsChecked == true)
-                                                {
-                                                    MyYmodem.ClearAll();
-                                                    //MessageBox.Show("恭喜，升级成功");
-                                                    InteractionInfoShow("设备升级成功");
-                                                }
-                                            }));
                                             m_showvalue = 0;
                                         }
                                     }
@@ -728,13 +739,15 @@ namespace WPFSerialAssistant
                                     MyYmodem.SetLastPackSendAck();          //收到最后一个数据包的回应
                                     SendData(MyYmodem.YmodemSendEOT());     //发送EOT信号
                                     InteractionInfoShow("EOT信号");
+                                    MyYmodem.SetEotSend();
 
                                     this.Dispatcher.Invoke(new Action(delegate {
 
                                         if (m_upgradedsp.DspButton.IsChecked == true)
                                         {
                                             MyYmodem.ClearAll();
-                                            MessageBox.Show("恭喜，升级成功");
+                                            //MessageBox.Show("恭喜，升级成功");
+                                            InteractionInfoShow("设备升级成功");
                                             Thread.Sleep(1000);
                                             ChangBaudRate(115200);//将波特率修改回来
                                                                   //ShowBar(Max);
@@ -744,6 +757,14 @@ namespace WPFSerialAssistant
                                 else if (MyYmodem.CheckEotSend() && !MyYmodem.CheckEotAck())
                                 {
                                     MyYmodem.SetEotAck();
+                                    //InteractionInfoShow("收到EOT信号ACK信号");
+                                    SendData(MyYmodem.YmodemSendEndPacket());
+                                    MyYmodem.ClearAll();
+                                    InteractionInfoShow("设备升级成功");
+                                    Thread.Sleep(1000);
+                                    ChangBaudRate(115200);//将波特率修改回来
+                                                          //ShowBar(Max);
+                                    m_upgradedsp.m_upgradeflag = false;
                                 }
                                 break;
                             case Ymodem.MODEM_NAK:
@@ -766,8 +787,6 @@ namespace WPFSerialAssistant
                                     InteractionInfoShow("收到设备的起始包的C,开始传输");
                                 }
                             }
-
-
                         }
                         break;
                     default:
@@ -779,18 +798,36 @@ namespace WPFSerialAssistant
 
 
 
-
             #region 烧录语音
-            if(m_downloadvoiceflag == 1)
+
+            if (m_downloadvoice != null && m_downloadvoice.m_dlflag && m_downloadvoiceflag == 1) 
             {
-
-
-
-
-
-
-
-
+                ++m_voicievalue;
+                if (recvBuffer[2] == 0x00 && recvBuffer[3] == 0x00)
+                {
+                    SendData(m_downloadvoice.makepackage(0x01, 0x01));
+                    ShowBar(m_voicievalue, m_downloadvoice);  
+                }
+                else if (recvBuffer[3] == 0x30)
+                {
+                    if (recvBuffer[2] >= m_downloadvoice.cnt)
+                    {
+                        Thread.Sleep(2000);
+                        InteractionInfoShow("烧录语音完成,重启设备");
+                        m_downloadvoiceflag = 0;
+                        m_downloadvoice.m_dlflag = false;
+                        ResetMcu();
+                        return;
+                    }
+                       
+                    SendData(m_downloadvoice.makepackage((Byte)(recvBuffer[2] + 1), 0x01));
+                    ShowBar(m_voicievalue, m_downloadvoice);
+                }
+                else
+                {
+                    SendData(m_downloadvoice.makepackage(recvBuffer[2], (Byte)(recvBuffer[3] + 1)));
+                    ShowBar(m_voicievalue, m_downloadvoice);
+                }
             }
 
             #endregion

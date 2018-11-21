@@ -125,7 +125,7 @@ namespace WPFSerialAssistant
 
 
 
-        private bool SendData(List<byte> Tab)
+        public bool SendData(List<byte> Tab)
         {
             if (Tab != null)
             {
@@ -145,6 +145,25 @@ namespace WPFSerialAssistant
 
         }
 
+        public bool SendData(Byte[] Tab)
+        {
+            if (Tab != null)
+            {
+                string hex = "";
+                foreach (byte m in Tab)
+                {
+                    hex += m.ToString("X2");
+                    hex += " ";
+                }
+                return SerialPortWrite(hex);
+            }
+            else
+            {
+                MessageBox.Show("发送数据不能为空");
+                return false;
+            }
+
+        }
 
 
 

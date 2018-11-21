@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,9 +27,66 @@ namespace WPFSerialAssistant
             this.parent = parent;
         }
 
+        Byte[] databuffer = new Byte[50000];
 
+        private FileStream mFileStream = null;
+        private Byte high = 0;
+        private Byte low = 0;
+        public bool m_dlflag = false;
+        public int cnt = 0;
+
+
+
+        Byte Crc8(Byte[] puchMsg, UInt16 usDataLen)    //crcData = crc16(sendbuf,3);
+        {
+            UInt16 uIndex = 0;
+            Byte revalue = 0;
+            for (UInt16 i = 0; i < usDataLen; ++i)
+                revalue += puchMsg[uIndex++];
+            return revalue;
+        }
+
+
+
+
+        public Byte[ ] makepackage(Byte file_num, Byte package)
+        {
+            Byte[] buffer = new Byte[1007];
+            buffer[0] = 0XAA;
+            buffer[1] = 0X85;
+            if (package == 1)
+            {
+
+                this.Dispatcher.Invoke(new Action(delegate
+                {
+                    mFileStream = new FileStream(((TextBox)FindName("FileBox" + (file_num - 1).ToString())).Text, FileMode.Open, FileAccess.Read);
+                    this.parent.statusInfoTextBlock.Text = "获取升级文件成功";
+                }));
+                 
+                high = (Byte)((mFileStream.Length - 44)/256);
+                low  = (Byte)((mFileStream.Length - 44) % 256);
+
+                mFileStream.Seek(44, SeekOrigin.Begin);
+                mFileStream.Read(databuffer, 0, (int)mFileStream.Length);
+                databuffer[0] = high;
+                databuffer[1] = low;
+            }
+
+            buffer[2] = file_num;
+            buffer[3] = high;
+            buffer[4] = low;
+            buffer[5] = package;
+
+            Array.Copy(databuffer, (package - 1) * 1000, buffer, 6,1000);
+            buffer[1006] = Crc8(buffer, 1006);
+
+            return buffer;
+        }
+
+        //public List<byte> m_voicebuffer = new List<byte>();
         
-
+        
+        
         bool CheckUartIsOpened()
         {
             if ((string)(this.parent.openClosePortButton.Content) == "关闭")
@@ -188,11 +246,14 @@ namespace WPFSerialAssistant
             fileDialog.Filter = "语音文件|*.wav";      //设置要选择的文件的类型
             if (fileDialog.ShowDialog() == true)
             {
-                int cnt = System.IO.Directory.GetFiles(System.IO.Path.GetDirectoryName(fileDialog.FileName)).Length;
+                cnt = System.IO.Directory.GetFiles(System.IO.Path.GetDirectoryName(fileDialog.FileName)).Length;
                 for (int i = 0; i < cnt; ++i)
                 {
                     ((TextBox)FindName("FileBox" +　i.ToString())).Text = System.IO.Directory.GetFiles(System.IO.Path.GetDirectoryName(fileDialog.FileName)).ElementAt(i);
                 }
+
+                voicebar.Maximum = 48 * cnt;        //由于历史原因，每一个语音一共有48包组成，每一包字节数为1007，空白处补0
+                voicebar.Value = 0;
 
                 if (cnt == 9)
                 {
@@ -228,14 +289,14 @@ namespace WPFSerialAssistant
                     return;
                 }
 
+                m_dlflag = true;
 
                 string unlockdata = "01 10 00 23 00 01 02 00 01 60 C3";
                 this.parent.SendData(unlockdata);
                 System.Threading.Thread.Sleep(2000);
 
-
-
-
+                string wipedata = "AA 85 00 00 00 00 2F";
+                this.parent.SendData(wipedata);
 
             }
             else
@@ -259,6 +320,9 @@ namespace WPFSerialAssistant
                 MessageBox.Show("请先获取加载语音文件再试听");
                 return;
             }
+
+          
+
 
             string path = ((TextBox)FindName("FileBox1")).Text;
             int cnt = System.IO.Directory.GetFiles(System.IO.Path.GetDirectoryName(path)).Length;

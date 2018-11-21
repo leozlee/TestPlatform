@@ -23,20 +23,20 @@ namespace WPFSerialAssistant
     public class Ymodem
     {
 
-        public string mUpgradeFilePath;
-        public string mUpgradeFile;
-        private bool mFirstPackSend = false;
-        private bool mFirstPackSendAck = false;
-        private bool mLastPackSend = false;
-        private bool mLastPackSendAck = false;
+        public string mUpgradeFilePath  = "";
+        public string mUpgradeFile      = "";
+        private bool  mFirstPackSend    = false;
+        private bool  mFirstPackSendAck = false;
+        private bool  mLastPackSend     = false;
+        private bool  mLastPackSendAck  = false;
 
         //协议结束包标志位
-        private bool mEndPackSend = false;
+        private bool mEndPackSend    = false;
         private bool mEndPackSendAck = false;
 
 
         private bool mEotSend = false;
-        private bool mEotAck = false;
+        private bool mEotAck  = false;
 
 
         private FileStream mFileStream = null;
@@ -45,7 +45,7 @@ namespace WPFSerialAssistant
      
         
         private int mPackNum = 0;//计算分包报数
-        private int mModNum = 0;
+        private int mModNum  = 0;
         private byte mLastPackType = 0;
 
         private int mPackCnt = 0;
@@ -53,17 +53,17 @@ namespace WPFSerialAssistant
 
         public void ClearAll()
         {
-            mFirstPackSend = false;
+            mFirstPackSend    = false;
             mFirstPackSendAck = false;
-            mLastPackSend = false;
-            mLastPackSendAck = false;
+            mLastPackSend     = false;
+            mLastPackSendAck  = false;
 
-            mEndPackSend = false;
-            mEndPackSendAck = false;
+            mEndPackSend      = false;
+            mEndPackSendAck   = false;
 
-            mEotSend = false;
-            mEotAck = false;
-            packetNumber = 0x00;
+            mEotSend          = false;
+            mEotAck           = false;
+            packetNumber      = 0x00;
             invertedPacketNumber = 0xFF;
 
             mPackCnt = 0;
@@ -79,7 +79,7 @@ namespace WPFSerialAssistant
         public const byte MODEM_ACK = 0X06;       //确认应答
         public const byte MODEM_NAK = 0X15;       //出现错误
         public const byte MODEM_CAN = 0X18;       //取消传输
-        public const byte MODEM_C = 0X43;       //接收方处于接收状态
+        public const byte MODEM_C   = 0X43;       //接收方处于接收状态
 
 
 

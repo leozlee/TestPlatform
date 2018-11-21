@@ -26,7 +26,8 @@ namespace WPFSerialAssistant
             this.parent = parent;
         }
 
-        
+        public bool m_upgradeflag = false;
+
 
         private void OpenUpgradeFileButton_Click(object sender, RoutedEventArgs e)
         {
@@ -50,7 +51,7 @@ namespace WPFSerialAssistant
 
                         //将升级文件传入ymodem打开
                         this.parent.MyYmodem.ReadFileData(fileDialog.FileName);
-                        UpgradeProgressBar.Maximum = this.parent.MyYmodem.GetPackNum() + 10;
+                        UpgradeProgressBar.Maximum = this.parent.MyYmodem.GetPackNum() + 5;
 
                         UpgradeProgressBar.Value = 0;
 
@@ -74,7 +75,7 @@ namespace WPFSerialAssistant
 
                         //将升级文件传入ymodem打开
                         this.parent.MyYmodem.ReadFileData(fileDialog.FileName);
-                        UpgradeProgressBar.Maximum = this.parent.MyYmodem.GetPackNum() + 6;
+                        UpgradeProgressBar.Maximum = this.parent.MyYmodem.GetPackNum() + 3;
                         UpgradeProgressBar.Value = 0;
 
                     }
@@ -106,7 +107,7 @@ namespace WPFSerialAssistant
             if ((UpgradeFileBox.Text) != "升级文件在这里显示")
             {
                 //发送数据锁存数据
-
+                m_upgradeflag = true;
                 if (McuButton.IsChecked == true)
                 {
                     string hex = this.parent.MyYmodem.mUpgradeFile.Split('.')[1];
