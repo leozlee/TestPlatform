@@ -75,7 +75,7 @@ namespace WPFSerialAssistant
 
                         //将升级文件传入ymodem打开
                         this.parent.MyYmodem.ReadFileData(fileDialog.FileName);
-                        UpgradeProgressBar.Maximum = this.parent.MyYmodem.GetPackNum() + 3;
+                        UpgradeProgressBar.Maximum = this.parent.MyYmodem.GetPackNum() + 5;
                         UpgradeProgressBar.Value = 0;
 
                     }
@@ -90,16 +90,6 @@ namespace WPFSerialAssistant
                 MessageBox.Show("请先打开串口，再尝试升级");
             }
         }
-
-
-
-
-
-
-
-
-
-
 
 
         private void UpgradeButton_Click(object sender, RoutedEventArgs e)

@@ -42,18 +42,21 @@ namespace WPFSerialAssistant
 
         #endregion
 
-        public int m_showvalue = 0;         //进度条变量
+        public int m_showvalue   = 0;         //进度条变量
         public int m_upgradeflag = 0;      //升级程序的flag
         public int m_downloadvoiceflag = 0;      //升级程序的flag
         public int m_voicievalue = 0;
+        public bool m_configflag = false;
 
 
-        //查询对象
-        //private VersionTpye Vtype = VersionTpye.None;
+        public bool m_resetfactshowflag = false;
+
+
 
         public Ymodem MyYmodem = new Ymodem();
         WPFSerialAssistant.upgradedsp m_upgradedsp = null;
         WPFSerialAssistant.downloadvoice m_downloadvoice = null;
+        WPFSerialAssistant.deviceconfig m_deviceconfig = null;
 
 
 
@@ -212,10 +215,51 @@ namespace WPFSerialAssistant
 
         private void calcconfigMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            WPFSerialAssistant.deviceconfig m_deviceconfig = new deviceconfig();
+            m_configflag = true;
+            m_deviceconfig = new deviceconfig(this);
             m_deviceconfig.ShowDialog();
-            
+            m_configflag = false;
+
+
         }
+
+        //CRC校验函数
+        public static byte[] CRC16(byte[] data, int length)
+        {
+            int len = length;
+            if (len > 0)
+            {
+                ushort crc = 0xFFFF;
+
+                for (int i = 0; i < len; i++)
+                {
+                    crc = (ushort)(crc ^ (data[i]));
+                    for (int j = 0; j < 8; j++)
+                    {
+                        crc = (crc & 1) != 0 ? (ushort)((crc >> 1) ^ 0xA001) : (ushort)(crc >> 1);
+                    }
+                }
+                byte hi = (byte)((crc & 0xFF00) >> 8);
+                byte lo = (byte)(crc & 0x00FF);
+
+                return new byte[] { lo, hi };//不知道为什么顺序是反的？？？？
+            }
+            return new byte[] { 0, 0 };
+        }
+
+
+        public string GetString(byte[] rec, int cnt)
+        {
+            byte[] buf = new byte[2];
+            buf[0] = rec[cnt + 1];
+            buf[1] = rec[cnt];
+            UInt16 i = BitConverter.ToUInt16(buf, 0);
+            return i.ToString();
+        }
+
+
+
+
 
         private void modifyconfigMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -800,7 +844,8 @@ namespace WPFSerialAssistant
 
             #region 烧录语音
 
-            if (m_downloadvoice != null && m_downloadvoice.m_dlflag && m_downloadvoiceflag == 1) 
+            if (m_downloadvoice != null && m_downloadvoice.m_dlflag 
+                && m_downloadvoiceflag == 1 && recvBuffer.Count == 4) 
             {
                 ++m_voicievalue;
                 if (recvBuffer[2] == 0x00 && recvBuffer[3] == 0x00)
@@ -831,6 +876,80 @@ namespace WPFSerialAssistant
             }
 
             #endregion
+
+            #region 校验参数
+
+            if (m_deviceconfig != null && m_configflag)
+            {
+                switch (recvBuffer.Count)
+                {
+                    case 6:
+                        if (recvBuffer[0] == 0x01 && recvBuffer[1] == 0x90)
+                        {
+                            MessageBox.Show("设置参数不成功");
+                        }
+                        break;
+                    case 8:
+                        if (m_deviceconfig.m_resetfact)
+                        {
+                            m_deviceconfig.m_resetfact = false;
+                            SendData("01 10 00 35 00 01 02 00 01 62 35");
+                            m_resetfactshowflag = true;
+                        }
+                        if (m_resetfactshowflag)
+                        {
+                            m_resetfactshowflag = false;
+                            m_deviceconfig.Clear();
+                            this.Dispatcher.Invoke(new Action(delegate
+                            {
+                                statusInfoTextBlock.Text = "恢复原厂参数成功!";
+                            }));
+                        }
+
+                        break;
+                    case 125:
+                        if(recvBuffer[0] == 0x01 && recvBuffer[1] == 0x03)
+                        {
+                            byte[] Data = recvBuffer.ToArray();
+                            //计算CRC
+                            byte[] Crc16 = CRC16(Data, Data.Length - 2);
+
+                            //校验
+                            if (Crc16[0] == Data[Data.Length - 2] && Crc16[1] == Data[Data.Length - 1])
+                            {
+                                //pass
+                                this.Dispatcher.Invoke(new Action(delegate
+                                {
+                                    statusInfoTextBlock.Text = "获取参数成功";
+                                }));
+                                //将参数保存在一个数组中
+                                for (int i = 0; i < ((Data.Length - 5) >> 1); i++)
+                                {
+                                    m_deviceconfig.Para[i] = GetString(Data, i * 2 + 3);//跳过head的三个字节
+                                }
+                                //将参数显示在对应的位置
+                                Array.Copy(Data, 3, m_deviceconfig.ReadPara, 0, WPFSerialAssistant.deviceconfig.ParaCnt * 2);       //将读取的参数保存，用于对比
+                                m_deviceconfig.FillBox(m_deviceconfig.Para);
+                               
+
+                            }
+                            else
+                            {
+                                MessageBox.Show("CRC校验不通过，请再次获取参数");
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                
+
+            }
+
+
+            #endregion
+
+
 
         }
         #endregion

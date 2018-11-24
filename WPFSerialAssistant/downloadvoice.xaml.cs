@@ -265,18 +265,6 @@ namespace WPFSerialAssistant
             }
         }
 
-        //Byte Crc8(Byte * puchMsg, Byte usDataLen)    //crcData = crc16(sendbuf,3);
-        //{
-        //    Byte uIndex = 0;
-        //    Byte revalue = 0;
-        //    while (usDataLen--)
-        //        revalue += puchMsg[uIndex++];
-
-        //    return revalue;
-        //}
-
-
-
 
         private void button_14_Click(object sender, RoutedEventArgs e)
         {
