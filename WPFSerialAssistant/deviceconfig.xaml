@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPFSerialAssistant"
         mc:Ignorable="d"
-        Title="MR688B参数配置" Height="642.373" Width="1022.094">
+        Title="MR688B参数配置" Height="689.039" Width="1022.094">
     <Grid>
         <GroupBox x:Name="Configshow_groupBox" Header="参数区" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Height="381" Width="989"/>
         <Label x:Name="label0" Content="时区" HorizontalAlignment="Left" Margin="10,14,0,0" VerticalAlignment="Top" Height="24" Width="125" FlowDirection="RightToLeft"/>
@@ -128,24 +128,32 @@
         <TextBox x:Name="textBox57" HorizontalAlignment="Left" Height="24" Margin="869,302,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
         <TextBox x:Name="textBox58" HorizontalAlignment="Left" Height="24" Margin="869,326,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120" IsReadOnly="True"/>
         <TextBox x:Name="textBox59" HorizontalAlignment="Left" Height="24" Margin="869,350,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120" IsReadOnly="True"/>
-        <GroupBox x:Name="Pic_groupBox" Header="图片区" HorizontalAlignment="Left" Margin="10,386,0,0" VerticalAlignment="Top" Height="210" Width="216"/>
-        <GroupBox x:Name="Function_groupBox" Header="操作区" HorizontalAlignment="Left" Margin="255,386,0,0" VerticalAlignment="Top" Height="210" Width="148"/>
-        <Button x:Name="GetConfig_Button" Content="获取参数" HorizontalAlignment="Left" Margin="264,406,0,0" VerticalAlignment="Top" Width="127" Click="GetConfig_Button_Click"/>
-        <Button x:Name="ResetFact_Button" Content="恢复原厂参数" HorizontalAlignment="Left" Margin="408,577,0,0" VerticalAlignment="Top" Width="126" Click="ResetFact_Button_Click"/>
-        <Button x:Name="TakePhoto_Button" Content="拍 照" HorizontalAlignment="Left" Margin="862,577,0,0" VerticalAlignment="Top" Width="127"/>
-        <Button x:Name="LoadConfigFile_Button" Content="加载参数配置文件" HorizontalAlignment="Left" Margin="264,478,0,0" VerticalAlignment="Top" Width="127" Click="LoadConfigFile_Button_Click"/>
-        <Button x:Name="SaveConfigFile_Button" Content="保存参数配置文件" HorizontalAlignment="Left" Margin="264,526,0,0" VerticalAlignment="Top" Width="127" Click="SaveConfigFile_Button_Click"/>
-        <Button x:Name="ClearShow_Button" Content="清空显示区域" HorizontalAlignment="Left" Margin="264,454,0,0" VerticalAlignment="Top" Width="127" Click="ClearShow_Button_Click"/>
-        <Button x:Name="SetConfig_Button" Content="设置参数" HorizontalAlignment="Left" Margin="264,430,0,0" VerticalAlignment="Top" Width="127" Click="SetConfig_Button_Click"/>
-        <TextBox x:Name="ParaBox" HorizontalAlignment="Left" Height="19" Margin="264,502,0,0" Text="参数文件" VerticalAlignment="Top" Width="127" FlowDirection="RightToLeft"/>
-        <Button x:Name="CheckConfig_Button" Content="校验参数" HorizontalAlignment="Left" Margin="264,550,0,0" VerticalAlignment="Top" Width="127" Click="CheckConfig_Button_Click" ToolTip="检验前请先获取参数"/>
-        <TextBox x:Name="DSP_vserion" HorizontalAlignment="Left" Height="24" Margin="489,401,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="56"/>
-        <TextBox x:Name="DPS_boot_version" HorizontalAlignment="Left" Height="24" Margin="489,425,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="56"/>
-        <TextBox x:Name="MCU_version" HorizontalAlignment="Left" Height="24" Margin="489,449,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="56"/>
-        <TextBox x:Name="MCU_boot_version" HorizontalAlignment="Left" Height="24" Margin="489,473,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="56"/>
-        <CheckBox x:Name="checkBox0" Content="DSP版本号" HorizontalAlignment="Left" Margin="547,405,0,0" VerticalAlignment="Top" Height="18" Width="95" RenderTransformOrigin="0.5,0.542"/>
-        <CheckBox x:Name="checkBox1" Content="DSP-boot" HorizontalAlignment="Left" Margin="547,428,0,0" VerticalAlignment="Top" Height="16" Width="95"/>
-        <CheckBox x:Name="checkBox2" Content="MCU版本号" HorizontalAlignment="Left" Margin="547,453,0,0" VerticalAlignment="Top" Height="17" Width="95"/>
-        <CheckBox x:Name="checkBox3" Content="MCU-boot" HorizontalAlignment="Left" Margin="547,477,0,0" VerticalAlignment="Top" Height="17" Width="95"/>
+        <GroupBox x:Name="Pic_groupBox" Header="图片区" HorizontalAlignment="Left" Margin="10,386,0,0" VerticalAlignment="Top" Height="264" Width="333" >
+            <Image x:Name="image" HorizontalAlignment="Left" Height="240" VerticalAlignment="Top" Width="320" Margin="0,0,-2,-12"/>
+        </GroupBox>
+        <GroupBox x:Name="Function_groupBox" Header="操作区" HorizontalAlignment="Left" Margin="355,386,0,0" VerticalAlignment="Top" Height="188" Width="280"/>
+        <Button x:Name="GetConfig_Button" Content="获取参数" HorizontalAlignment="Left" Margin="364,406,0,0" VerticalAlignment="Top" Width="128" Click="GetConfig_Button_Click" Height="31"/>
+        <Button x:Name="ResetFact_Button" Content="恢复原厂参数" HorizontalAlignment="Left" Margin="497,442,0,0" VerticalAlignment="Top" Width="128" Click="ResetFact_Button_Click" Height="31"/>
+        <Button x:Name="TakePhoto_Button" Content="拍 照" HorizontalAlignment="Left" Margin="364,579,0,0" VerticalAlignment="Top" Width="84" Height="28" Click="TakePhoto_Button_Click" ToolTip="是"/>
+        <Button x:Name="LoadConfigFile_Button" Content="加载参数配置文件" HorizontalAlignment="Left" Margin="364,478,0,0" VerticalAlignment="Top" Width="128" Click="LoadConfigFile_Button_Click" Height="31"/>
+        <Button x:Name="SaveConfigFile_Button" Content="保存参数配置文件" HorizontalAlignment="Left" Margin="497,478,0,0" VerticalAlignment="Top" Width="128" Click="SaveConfigFile_Button_Click" Height="31"/>
+        <Button x:Name="ClearShow_Button" Content="清空显示区域" HorizontalAlignment="Left" Margin="364,442,0,0" VerticalAlignment="Top" Width="128" Click="ClearShow_Button_Click" Height="31"/>
+        <Button x:Name="SetConfig_Button" Content="设置参数" HorizontalAlignment="Left" Margin="497,406,0,0" VerticalAlignment="Top" Width="128" Click="SetConfig_Button_Click" Height="31"/>
+        <TextBox x:Name="ParaBox" HorizontalAlignment="Left" Height="19" Margin="364,514,0,0" Text="参数文件" VerticalAlignment="Top" Width="260" FlowDirection="RightToLeft"/>
+        <Button x:Name="CheckConfig_Button" Content="校验参数" HorizontalAlignment="Left" Margin="364,538,0,0" VerticalAlignment="Top" Width="101" Click="CheckConfig_Button_Click" ToolTip="检验前请先获取参数" Height="31"/>
+        <TextBox x:Name="DSP_vserion" HorizontalAlignment="Left" Height="24" Margin="650,408,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="41" ToolTip="输入版本号"/>
+        <TextBox x:Name="DPS_boot_version" HorizontalAlignment="Left" Height="24" Margin="650,432,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="41" ToolTip="输入版本号"/>
+        <TextBox x:Name="MCU_version" HorizontalAlignment="Left" Height="24" Margin="650,456,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="41" ToolTip="输入版本号"/>
+        <TextBox x:Name="MCU_boot_version" HorizontalAlignment="Left" Height="24" Margin="650,480,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="41" ToolTip="输入版本号"/>
+        <CheckBox x:Name="checkBox0" Content="DSP版本号" HorizontalAlignment="Left" Margin="696,413,0,0" VerticalAlignment="Top" Height="18" Width="95" RenderTransformOrigin="0.5,0.542" ToolTip="勾选二次检验版本号"/>
+        <CheckBox x:Name="checkBox1" Content="DSP-boot" HorizontalAlignment="Left" Margin="696,436,0,0" VerticalAlignment="Top" Height="16" Width="95" ToolTip="勾选二次检验版本号"/>
+        <CheckBox x:Name="checkBox2" Content="MCU版本号" HorizontalAlignment="Left" Margin="696,461,0,0" VerticalAlignment="Top" Height="17" Width="95" ToolTip="勾选二次检验版本号"/>
+        <CheckBox x:Name="checkBox3" Content="MCU-boot" HorizontalAlignment="Left" Margin="696,485,0,0" VerticalAlignment="Top" Height="17" Width="95" ToolTip="勾选二次检验版本号"/>
+        <Button x:Name="Reboot_dsp_Button" Content="软重启主机" HorizontalAlignment="Left" Margin="551,579,0,0" VerticalAlignment="Top" Width="74" Click="Reboot_dsp_Button_Click" Height="28"/>
+        <Button x:Name="reboot_mcu_Button" Content="软重启灯板" HorizontalAlignment="Left" Margin="460,579,0,0" VerticalAlignment="Top" Width="78" Click="reboot_mcu_Button_Click" Height="28"/>
+        <TextBox x:Name="sync_speed_textBox" HorizontalAlignment="Left" Height="19" Margin="650,514,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="22"/>
+        <Button x:Name="Sync_speed" Content="速度同步" HorizontalAlignment="Left" Margin="677,514,0,0" VerticalAlignment="Top" Width="96" Click="Sync_speed_Click" Height="19" ToolTip="速度同步45s后自动取消"/>
+        <CheckBox x:Name="Check_detail" Content="" HorizontalAlignment="Left" Margin="470,546,0,0" VerticalAlignment="Top" Height="28" Width="22" ToolTip="如果开启该选项，每一个修改的信息都有一个弹窗提示"/>
+        <TextBox x:Name="average_textbox" HorizontalAlignment="Left" Height="27" Margin="364,612,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="84" IsReadOnly="True"/>
     </Grid>
 </Window>

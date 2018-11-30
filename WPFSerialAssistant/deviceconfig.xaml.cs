@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Windows.Threading;
 using System.Text;
 using System.Windows.Input;
@@ -25,9 +26,18 @@ namespace WPFSerialAssistant
         {
             InitializeComponent();
             this.parent = parent;
+
+            parent.InitMyTimer();
+
         }
 
-    
+        //定时发送按钮    
+        DispatcherTimer dispatcherTimer = new DispatcherTimer();
+        private int resend = 0;
+        private bool flag = false;
+
+        public System.IO.FileStream m_ImageStream = null;
+
 
         //目前参数个数的60
         public const int ParaCnt = 60;
@@ -37,18 +47,28 @@ namespace WPFSerialAssistant
         public byte[] SendPara = new byte[ParaCnt * 2];          //保存发送的参数，用于判断哪个参数修改过
         public byte[] JsonPara = new byte[ParaCnt * 2];           //加载从本地xml文件转换后的参数
 
+       
 
+        //恢复默认出厂设置参数
         public bool m_resetfact = false;
-
-        public string m_showinfo = "This is a test!";
+        //软重启dsp
+        public bool m_reboot_dsp = false;
+        //软重启mcu
+        public bool m_reboot_mcu = false;
 
         //这几个索引号的参数是使用二进制显示
         public int[] ParaIndex = { 2, 6, 9, 10, 28, 54};
 
         //这几个参数是会改变的，比较的时候需要跳过
-        public int[] ChangeIndex = {22,41,42};
+        //3 22 41 42 58 59
+        public int[] ChangeIndex = {3*2,  3*2 + 1,
+                                    22*2, 22*2 + 1,
+                                    41*2, 41*2 + 1,
+                                    42*2, 42*2 + 1,
+                                    58*2, 58*2 + 1,
+                                    59*2, 59*2 + 1 };
 
-        //这几个参数是版本号的索引号
+        //这几个参数是版本号
         public int[] VsersionIndex = { 33, 34, 120, 121};
 
 
@@ -59,10 +79,10 @@ namespace WPFSerialAssistant
 
 
 
+        public bool m_readpicflag = false;
 
 
-
-
+        //填充表格
         public void FillBox(string[] Para)
         {
             for (int i = 0; i < Para.Count(); ++i)
@@ -425,7 +445,7 @@ namespace WPFSerialAssistant
 
                 if (((CheckBox)FindName("checkBox3")).IsChecked == true)
                 {
-                     if (((TextBox)FindName("MCU_boot_version")).Text != this.parent.GetString(JsonPara, 50 / 2))
+                     if (((TextBox)FindName("MCU_boot_version")).Text != this.parent.GetString(JsonPara, 50 * 2))
                     {
                         checkflag = true;
                         MessageBox.Show("单片机boot版本号检验不通过");
@@ -453,7 +473,6 @@ namespace WPFSerialAssistant
             //将修改后的数据和修改前的数据对比，然后基于差异得出修改的参数
             byte j = 0;
             bool SetFlag = false;
-
 
             //如果版本号程序版本号不一样，不需要比对，直接退出
 
@@ -489,24 +508,30 @@ namespace WPFSerialAssistant
                 {
                     if (JsonPara[j] != ReadPara[j])
                     {
-                        //如果是GPS相关的信息，不需要比对
+                        //如果是变化的的信息，不需要比对
                         if (ChangeIndex.Contains(j))
                             continue;
 
-                        //this.Dispatcher.Invoke(new Action(delegate
-                        //{
-                        //    this.parent.statusInfoTextBlock.Text = "你将修改" + ((Label)FindName("label" + (j / 2).ToString())).Content
-                        //    + ":" + ReadPara[j].ToString() + "-->" + JsonPara[j];
-                        //}));
+                        if (((CheckBox)FindName("Check_detail")).IsChecked == true)
+                        {
 
-                        //MessageBox.Show("你将修改" + ((Label)FindName("label" + (j / 2).ToString())).Content
-                        //    + ":" + ReadPara[j].ToString() + "-->" + JsonPara[j]);
+                            MessageBox.Show("你将修改" + ((Label)FindName("label" + (j / 2).ToString())).Content
+                              + ":" + ReadPara[j].ToString() + "-->" + JsonPara[j]);
+
+                            //this.Dispatcher.Invoke(new Action(delegate
+                            //{
+                            //    this.parent.statusInfoTextBlock.Text = "你将修改" + ((Label)FindName("label" + (j / 2).ToString())).Content
+                            //    + ":" + ReadPara[j].ToString() + "-->" + JsonPara[j];
+                            //}));
+                        }
+
+
 
                         //计算crc
                         SetFlag = true;
 
                         SendData[2] = 0x00;     //start addr high
-                        SendData[3] = Convert.ToByte(j >> 1);     //start addr low
+                        SendData[3] = Convert.ToByte(j >> 1);                        //start addr low
                         SendData[7] = JsonPara[Convert.ToByte((j >> 1) * 2)];     //reg num low
                         SendData[8] = JsonPara[Convert.ToByte((j >> 1) * 2) + 1];     //byte mount
 
@@ -514,10 +539,6 @@ namespace WPFSerialAssistant
                         SendData[9] = CrcSend[0];
                         SendData[10] = CrcSend[1];
                         this.parent.SendData(SendData);
-                        this.Dispatcher.Invoke(new Action(delegate
-                        {
-                            this.parent.statusInfoTextBlock.Text = "参数自动校验中...";
-                        }));
                         System.Threading.Thread.Sleep(2000);
                     }
                 }
@@ -547,7 +568,201 @@ namespace WPFSerialAssistant
         private void ResetFact_Button_Click(object sender, RoutedEventArgs e)
         {
             m_resetfact = true;
+            //这个是数据锁存指令
             this.parent.SendData("01 10 00 03 00 01 02 00 01 67 A3");
+        }
+
+        private void Reboot_dsp_Button_Click(object sender, RoutedEventArgs e)
+        {
+            //这个是数据锁存指令
+            this.parent.SendData("01 10 00 03 00 01 02 00 01 67 A3");
+            m_reboot_dsp = true;
+            //Tx:024-01 10 00 1E 00 01 02 00 01 64 2E
+
+        }
+
+        private void reboot_mcu_Button_Click(object sender, RoutedEventArgs e)
+        {
+            //这个是数据锁存指令
+            this.parent.SendData("01 10 00 03 00 01 02 00 01 67 A3");
+            m_reboot_mcu = true;
+            //Tx:055-01 10 00 1F 00 01 02 00 01 65 FF
+
+
+        }
+
+
+        public byte AddSum(byte[] sync, int cnt)
+        {
+            byte crc = 0x00;
+            for(int i = 0; i < cnt; ++i)
+            {
+                crc += sync[i];
+            }
+            return crc;
+        }
+
+        private void Sync_speed_Click(object sender, RoutedEventArgs e)
+        {
+            
+            byte[] sync = new byte[10];
+            sync[0] = 0XAA;
+            sync[1] = 0X75;
+            sync[2] = 0X55;
+
+            this.Dispatcher.Invoke(new Action(delegate
+            {
+
+                if (((Button)FindName("Sync_speed")).Content.ToString() == "速度同步")
+                {
+
+                    if (!flag)
+                    {
+                        flag = true;
+                        dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
+                        dispatcherTimer.Interval = new TimeSpan(0, 0, 5);
+                    }
+
+                    dispatcherTimer.Start();
+
+
+                    ((Button)FindName("Sync_speed")).Content = "速度同步中";
+                    if (((TextBox)FindName("sync_speed_textBox")).Text != "")
+                    {
+                        sync[3] = Convert.ToByte(((TextBox)FindName("sync_speed_textBox")).Text);
+                        sync[4] = Convert.ToByte((DateTime.Now.Year - 2000));
+                        sync[5] = Convert.ToByte((DateTime.Now.Month));
+                        sync[6] = Convert.ToByte((DateTime.Now.Day));
+                        sync[7] = Convert.ToByte((DateTime.Now.Hour));
+                        sync[8] = Convert.ToByte((DateTime.Now.Minute));
+                        sync[9] = AddSum(sync, 9);
+                    }
+                    this.parent.SendData(sync);
+                }
+                else if (((Button)FindName("Sync_speed")).Content.ToString() == "速度同步中")
+                {
+                    dispatcherTimer.Stop();
+                    ((Button)FindName("Sync_speed")).Content = "速度同步";
+                }
+            }));
+        }
+
+
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+
+            resend++;
+
+
+            if (resend == 9)//5s一次的速度同步，45s后會自動取消
+            {
+                resend = 0;
+                ((Button)FindName("Sync_speed")).Content = "速度同步";
+                dispatcherTimer.Stop();
+            }
+            else
+            {
+                byte[] sync = new byte[10];
+                sync[0] = 0XAA;
+                sync[1] = 0X75;
+                sync[2] = 0X55;
+
+                this.Dispatcher.Invoke(new Action(delegate
+                {
+                    if (((TextBox)FindName("sync_speed_textBox")).Text != "")
+                    {
+                        sync[3] = Convert.ToByte(((TextBox)FindName("sync_speed_textBox")).Text);
+                        sync[4] = Convert.ToByte((DateTime.Now.Year - 2000));
+                        sync[5] = Convert.ToByte((DateTime.Now.Month));
+                        sync[6] = Convert.ToByte((DateTime.Now.Day));
+                        sync[7] = Convert.ToByte((DateTime.Now.Hour));
+                        sync[8] = Convert.ToByte((DateTime.Now.Minute));
+                        sync[9] = AddSum(sync, 9);
+                    }
+                    this.parent.SendData(sync);
+                    
+                }));
+            }
+        }
+
+
+
+
+
+
+
+
+
+        public void showpic()
+        {
+            this.Dispatcher.Invoke(new Action(delegate
+            {
+                String appStartupPath = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+                appStartupPath += "\\tmp.jpg";
+
+                BitmapImage testpic = new BitmapImage();
+                m_ImageStream = new System.IO.FileStream(appStartupPath, System.IO.FileMode.Open);
+                testpic.BeginInit();
+                testpic.StreamSource = m_ImageStream;
+                testpic.EndInit();
+                ((Image)FindName("image")).Source = testpic;
+
+
+                int stride = (int)testpic.PixelWidth * (testpic.Format.BitsPerPixel +7)/ 8;
+                byte[] pixels = new byte[(int)testpic.PixelHeight * stride];
+                //byte[] imgPixel = new byte[testpic.PixelWidth * testpic.PixelHeight * 3];
+                testpic.CopyPixels(pixels, stride, 0);
+
+                double sum = 0;
+                double mean = 0;
+
+                int R, G, B;
+                for (int y = 0; y < testpic.PixelHeight; ++y)
+                {
+                    for (int x = 0; x < testpic.PixelWidth; x+=3)
+                    {
+                        R = pixels[x + y * stride];
+                        G = pixels[x + 1 + y * stride];
+                        B = pixels[x + 2 + +y * stride];
+                        sum += B * 0.114 + G * 0.587 + R * 0.299;
+                    }
+                }
+
+
+                mean = sum / (testpic.PixelWidth * testpic.PixelHeight);
+                ((TextBox)FindName("average_textbox")).Text = mean.ToString();
+                ((Button)FindName("TakePhoto_Button")).Content = "拍照";
+         
+
+            }));
+        }
+
+        public void ShowNormal()
+        {
+            this.Dispatcher.Invoke(new Action(delegate
+            {
+
+                String appStartupPath = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+                appStartupPath += "\\fail.jpg";
+                BitmapImage testpic = new BitmapImage(new Uri(appStartupPath));
+                ((Image)FindName("image")).Source = testpic;
+                ((Button)FindName("TakePhoto_Button")).Content = "拍照";
+            }));
+
+        }
+
+
+        private void TakePhoto_Button_Click(object sender, RoutedEventArgs e)
+        {
+            m_readpicflag = true;
+            this.parent.SendData("AA 75 56 56 00 01 F5 02 00 C3");
+
+            this.Dispatcher.Invoke(new Action(delegate
+            {
+                ((Button)FindName("TakePhoto_Button")).Content = "采图中..";
+            }));
+
+
         }
     }
 }

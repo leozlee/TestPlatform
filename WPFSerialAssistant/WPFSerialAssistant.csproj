@@ -41,6 +41,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -89,6 +90,9 @@
     <Compile Include="downloadvoice.xaml.cs">
       <DependentUpon>downloadvoice.xaml</DependentUpon>
     </Compile>
+    <Compile Include="multidownload.xaml.cs">
+      <DependentUpon>multidownload.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SAFile.cs" />
     <Compile Include="SASerialPort.cs" />
     <Compile Include="SATimer.cs" />
@@ -124,6 +128,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="multidownload.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Upgradedsp.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

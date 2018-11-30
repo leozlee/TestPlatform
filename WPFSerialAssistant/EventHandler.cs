@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
+using System.Windows.Threading;
 using System.Threading;
 using System.Windows;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -43,7 +46,7 @@ namespace WPFSerialAssistant
         #endregion
 
         public int m_showvalue   = 0;         //进度条变量
-        public int m_upgradeflag = 0;      //升级程序的flag
+        public int m_upgradeflag = 0;           //升级程序的flag
         public int m_downloadvoiceflag = 0;      //升级程序的flag
         public int m_voicievalue = 0;
         public bool m_configflag = false;
@@ -51,13 +54,35 @@ namespace WPFSerialAssistant
 
         public bool m_resetfactshowflag = false;
 
+        public List<byte> image_list = new List<byte>();
+  
 
+        DispatcherTimer DealPicTimer = new DispatcherTimer();
+
+
+        
+
+        public void InitMyTimer()
+        {
+            DealPicTimer.Tick += DealwithPicture;
+            DealPicTimer.Interval = new TimeSpan(0, 0, 10);
+            DealPicTimer.IsEnabled = false;
+        }
+
+
+
+
+
+        int pic_size = 0;
+        private bool flag = true;
+        private int lastread = 0;
+    
 
         public Ymodem MyYmodem = new Ymodem();
-        WPFSerialAssistant.upgradedsp m_upgradedsp = null;
+        WPFSerialAssistant.upgradedsp m_upgradedsp       = null;
         WPFSerialAssistant.downloadvoice m_downloadvoice = null;
-        WPFSerialAssistant.deviceconfig m_deviceconfig = null;
-
+        WPFSerialAssistant.deviceconfig m_deviceconfig   = null;
+        WPFSerialAssistant.multidownload m_multidownload = null;
 
 
         #region Event handler for menu items
@@ -219,9 +244,17 @@ namespace WPFSerialAssistant
             m_deviceconfig = new deviceconfig(this);
             m_deviceconfig.ShowDialog();
             m_configflag = false;
+        }
+
+        private void mulitdownloadMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            m_multidownload = new multidownload();
+            m_multidownload.ShowDialog();
+
 
 
         }
+
 
         //CRC校验函数
         public static byte[] CRC16(byte[] data, int length)
@@ -605,11 +638,18 @@ namespace WPFSerialAssistant
             if (sp != null)
             {
                 // 临时缓冲区将保存串口缓冲区的所有数据
+                
                 int bytesToRead = sp.BytesToRead;
+                if (bytesToRead == 0)
+                {
+                    return;
+                }
+
                 byte[] tempBuffer = new byte[bytesToRead];
 
                 // 将缓冲区所有字节读取出来
                 sp.Read(tempBuffer, 0, bytesToRead);
+        
 
                 // 检查是否需要清空全局缓冲区先
                 if (shouldClear)
@@ -648,6 +688,37 @@ namespace WPFSerialAssistant
 
         #endregion
 
+
+
+
+
+
+
+        private void DealwithPicture(object sender, EventArgs e)
+        {
+            DealPicTimer.IsEnabled = false;
+            DealPicTimer.Stop();
+
+            if (!flag)
+            {
+                image_list.Clear();
+                pic_size = 0;
+                flag = true;
+                m_deviceconfig.m_readpicflag = false;
+
+                if (m_deviceconfig.m_ImageStream != null)
+                {
+                    m_deviceconfig.m_ImageStream.Close();
+                    m_deviceconfig.m_ImageStream.Dispose();
+                }
+                m_deviceconfig.ShowNormal();
+
+                //m_deviceconfig.showpic();
+            }
+       
+        }
+
+
         #region 数据处理
 
         private void CheckTimer_Tick(object sender, EventArgs e)
@@ -669,6 +740,10 @@ namespace WPFSerialAssistant
         {
             List<byte> recvBuffer = new List<byte>();
             recvBuffer.AddRange((List<byte>)obj);
+
+ 
+
+
 
             if (recvBuffer.Count == 0)
             {
@@ -841,7 +916,6 @@ namespace WPFSerialAssistant
             #endregion
 
 
-
             #region 烧录语音
 
             if (m_downloadvoice != null && m_downloadvoice.m_dlflag 
@@ -879,7 +953,7 @@ namespace WPFSerialAssistant
 
             #region 校验参数
 
-            if (m_deviceconfig != null && m_configflag)
+            if (m_deviceconfig != null && m_configflag && !m_deviceconfig.m_readpicflag)
             {
                 switch (recvBuffer.Count)
                 {
@@ -893,6 +967,7 @@ namespace WPFSerialAssistant
                         if (m_deviceconfig.m_resetfact)
                         {
                             m_deviceconfig.m_resetfact = false;
+                            System.Threading.Thread.Sleep(500);
                             SendData("01 10 00 35 00 01 02 00 01 62 35");
                             m_resetfactshowflag = true;
                         }
@@ -905,10 +980,32 @@ namespace WPFSerialAssistant
                                 statusInfoTextBlock.Text = "恢复原厂参数成功!";
                             }));
                         }
+                        if (m_deviceconfig.m_reboot_dsp)
+                        {
+                            m_deviceconfig.m_reboot_dsp = false;
+                            this.Dispatcher.Invoke(new Action(delegate
+                            {
+                                statusInfoTextBlock.Text = "软重启主机!";
+                            }));
+                            System.Threading.Thread.Sleep(500);
+                            SendData("01 10 00 1E 00 01 02 00 01 64 2E");
+                        }
 
+                        if (m_deviceconfig.m_reboot_mcu)
+                        {
+                            m_deviceconfig.m_reboot_mcu = false;
+                            this.Dispatcher.Invoke(new Action(delegate
+                            {
+                                statusInfoTextBlock.Text = "软重启灯板!";
+                            }));
+                            System.Threading.Thread.Sleep(500);
+                            SendData("01 10 00 1F 00 01 02 00 01 65 FF");
+                        }
+                        break;
+                    case 10:
                         break;
                     case 125:
-                        if(recvBuffer[0] == 0x01 && recvBuffer[1] == 0x03)
+                        if (recvBuffer[0] == 0x01 && recvBuffer[1] == 0x03)
                         {
                             byte[] Data = recvBuffer.ToArray();
                             //计算CRC
@@ -930,8 +1027,6 @@ namespace WPFSerialAssistant
                                 //将参数显示在对应的位置
                                 Array.Copy(Data, 3, m_deviceconfig.ReadPara, 0, WPFSerialAssistant.deviceconfig.ParaCnt * 2);       //将读取的参数保存，用于对比
                                 m_deviceconfig.FillBox(m_deviceconfig.Para);
-                               
-
                             }
                             else
                             {
@@ -942,7 +1037,92 @@ namespace WPFSerialAssistant
                     default:
                         break;
                 }
-                
+            }
+            else
+            {
+                //数据量大的时候处理函数会有点问题，所以如何处理这部分数据？
+
+                if (lastread != recvBuffer.Count)
+                {
+                    lastread = recvBuffer.Count;
+                    image_list.AddRange(recvBuffer);
+                }
+                else
+                {
+                    
+                    List<byte> tmp = image_list.GetRange(image_list.Count - recvBuffer.Count, recvBuffer.Count);
+                    if(tmp.All(recvBuffer.Contains) && image_list.Count == tmp.Count)
+                    {
+                        
+                    }
+                    else
+                    {
+                        
+                    }
+                }
+
+
+                if (flag)
+                {
+                    flag = false;
+                    pic_size = recvBuffer[5] * 256 + recvBuffer[6];
+                    DealPicTimer.IsEnabled = true;
+                    DealPicTimer.Start();
+                }
+
+
+                if (pic_size + 27 == image_list.Count)
+                {
+                    m_deviceconfig.m_readpicflag = false;
+                    //校验图片
+                    if (image_list[image_list.Count - 1] == m_deviceconfig.AddSum(image_list.ToArray(), image_list.Count - 1))
+                    {
+                        // 如果指定的配置路径不存在，则新建一个
+                        String appStartupPath = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+                        appStartupPath += "\\tmp.jpg";
+
+                        if (m_deviceconfig.m_ImageStream != null)
+                        {
+                            m_deviceconfig.m_ImageStream.Close();
+                            m_deviceconfig.m_ImageStream.Dispose();
+                        }
+
+                        if (System.IO.Directory.Exists(appStartupPath))
+                        {
+                            System.IO.Directory.Delete(appStartupPath);
+                        }
+
+                        using (System.IO.FileStream sw = new System.IO.FileStream(appStartupPath, System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite))
+                        {
+                            try
+                            {
+                                sw.Write(image_list.ToArray(), 26, image_list.Count - 27);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw ex;
+                            }
+                            sw.Close();
+                        }
+
+
+
+
+
+
+
+
+                        m_deviceconfig.showpic();
+                        image_list.Clear();
+                        pic_size = 0;
+                        flag = true;
+                        DealPicTimer.IsEnabled = false;
+                        DealPicTimer.Stop();
+
+                    }
+                }
+
+
 
             }
 

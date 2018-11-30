@@ -36,6 +36,7 @@
             <MenuItem Header="升级(_U)">
                 <MenuItem Name="upgradedspMenuItem" Header="升级设备" Click="upgradedspMenuItem_Click"></MenuItem>
                 <MenuItem Name="upgradevoiceMenuItem" Header="烧录语音" Click="upgradevoiceMenuItem_Click"></MenuItem>
+                <MenuItem Name="mulitdownloadMenuItem" Header="批量烧录语音" Click="mulitdownloadMenuItem_Click"></MenuItem>
             </MenuItem>
 
             <MenuItem Header="参数配置">

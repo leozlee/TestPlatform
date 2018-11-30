@@ -56,6 +56,9 @@ namespace WPFSerialAssistant
                 serialPort.Open();
                 serialPort.DiscardInBuffer();
                 serialPort.DiscardOutBuffer();
+                //serialPort.ReceivedBytesThreshold = 128;
+                //serialPort.ReadBufferSize = 1024;//数据读缓存
+
                 Information(string.Format("成功打开端口{0}, 波特率{1}。", serialPort.PortName, serialPort.BaudRate.ToString()));
                 flag = true;
             }
@@ -251,7 +254,7 @@ namespace WPFSerialAssistant
         private void InitCheckTimer()
         {
             // 如果缓冲区中有数据，并且定时时间达到前依然没有得到处理，将会自动触发处理函数。
-            checkTimer.Interval = new TimeSpan(0, 0, 0, 0, TIMEOUT);
+            checkTimer.Interval = new TimeSpan(0, 0, 0, 1, TIMEOUT);
             checkTimer.IsEnabled = false;
             checkTimer.Tick += CheckTimer_Tick;
         }

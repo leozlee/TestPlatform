@@ -10,7 +10,7 @@
     <Grid Margin="0,0,2,0">
         <RadioButton x:Name="DspButton" Content="升级主机"  VerticalAlignment="Bottom" Height="18" Margin="133,0,279,189"/>
         <RadioButton x:Name="McuButton" Content="升级灯板"  VerticalAlignment="Bottom" Height="18" Margin="280,0,126,189"/>
-        <TextBox x:Name="UpgradeFileBox" Height="26" Margin="100,0,100,159" TextWrapping="Wrap" Text="升级文件在这里显示" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="UpgradeFileBox" Height="26" Margin="100,0,100,159" TextWrapping="Wrap" Text="升级文件在这里显示" VerticalAlignment="Bottom" FlowDirection="RightToLeft"/>
         <Button x:Name="OpenUpgradeFileButton" Click="OpenUpgradeFileButton_Click" VerticalAlignment="Bottom" Padding="3" Content="打开" Margin="150,0,262,103" Height="22"/>
         <Button x:Name="UpgradeButton" Click="UpgradeButton_Click" VerticalAlignment="Bottom" Padding="3" Content="升级" Margin="248,0,158,103" Height="22"/>
         <ProgressBar x:Name="UpgradeProgressBar" Margin="100,0,100,131"  VerticalAlignment="Bottom" Height="23" RenderTransformOrigin="0.5,0.5"/>
